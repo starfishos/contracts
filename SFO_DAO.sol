@@ -26,7 +26,7 @@ contract SFO_DAO is Ownable, ReentrancyGuard {
         bool status;
     }
     Dao[] public daos;
-
+    mapping(address => bool) public tokenAllow;
     mapping(uint16 => Councli[]) public daoCounclis;
 
     event LogDaoAdd(address indexed addr, address indexed token, uint16 indexed daoAt);
@@ -42,11 +42,17 @@ contract SFO_DAO is Ownable, ReentrancyGuard {
     event LogUserVote(address indexed addr, uint16 indexed daoAt, uint16 indexed proposalAt);
     event LogVoteFinish(address indexed addr, uint16 indexed daoAt, uint16 indexed proposalAt);
 
+    function setTokenAllow(address addr, bool allow) external onlyOwner {
+        tokenAllow[addr] = allow;
+    }
+
     function daoAdd(
         string[] memory params,
         address token,
         address lp
     ) external nonReentrant {
+        require(tokenAllow[token], "token not allow.");
+        require(lp == address(0) || tokenAllow[lp], "lp not allow.");
         require(token != address(0), "zero address not allow");
         require(!daoExist(token), "Dao exist.");
         uint256 frozenAmount = IERC20(token).totalSupply() / 100;
